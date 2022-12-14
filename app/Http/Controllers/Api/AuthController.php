@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    use ApiResponser;
+
     public function register(Request $request)
     {
         $post_data = $request->validate([
@@ -35,18 +38,18 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json([
-                'message' => 'Informacion de logueo inválida.',
-            ], 401);
+            return $this->set_response([
+                'message' => 'Clave / Password inválidos.',
+            ], 'error', 401);
         }
 
         $user  = User::where('email', $request['email'])->firstOrFail();
         $token = $user->createToken('authToken')->plainTextToken;
 
-        return response()->json([
-            'access_token' => $token,
-            'token_type'   => 'Bearer',
-        ]);
+        return  $this->set_response([
+            'access_token' => $token, 
+            'token_type' => 'Bearer'
+        ], 'success', 200);
     }
 
     public function logout(Request $request)
